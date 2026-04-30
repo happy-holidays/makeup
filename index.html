@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Lit — Identifications</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:rgba(10,11,14,.82);--card:rgba(18,20,26,.88);--border:#2a2d34;--accent:#7aad5a;--accent2:#5a9a3a;--text:#c8cad0;--dim:#6b6f78;--num:#4a7a34}
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px}
+body{background:#000;color:var(--text);font-family:'Crimson Pro',Georgia,serif;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+#bg-canvas{position:fixed;inset:0;z-index:0}
+#bg-canvas canvas{width:100%!important;height:100%!important}
+
+#landing{position:relative;z-index:10;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:rgba(0,0,0,.45);backdrop-filter:blur(3px)}
+#landing h1{font-family:'JetBrains Mono',monospace;font-size:clamp(28px,7vw,48px);color:var(--accent);letter-spacing:3px;margin-bottom:8px;text-shadow:0 2px 20px rgba(0,0,0,.6)}
+#landing .sub{color:#bbb;font-size:clamp(14px,3.5vw,18px);margin-bottom:32px;line-height:1.6;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+#landing .sub strong{color:#fff}
+#show-btn{background:var(--accent2);color:#fff;border:none;font-family:'JetBrains Mono',monospace;font-size:clamp(14px,3vw,17px);padding:14px 36px;letter-spacing:2px;cursor:pointer;transition:background .15s,transform .1s;box-shadow:0 4px 20px rgba(90,154,58,.3)}
+#show-btn:hover{background:var(--accent)}
+#show-btn:active{transform:scale(.97)}
+.note{color:#888;font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:20px;letter-spacing:1px}
+
+#questions{display:none;position:relative;z-index:10;padding:16px 16px 100px;max-width:720px;margin:0 auto}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 12px;border-bottom:1px solid var(--border);margin-bottom:16px;position:sticky;top:0;background:rgba(10,11,14,.92);backdrop-filter:blur(12px);z-index:15}
+.header h2{font-family:'JetBrains Mono',monospace;font-size:clamp(13px,3vw,16px);color:var(--accent);letter-spacing:2px}
+#copy-btn{background:var(--accent2);color:#fff;border:none;font-family:'JetBrains Mono',monospace;font-size:12px;padding:8px 16px;cursor:pointer;letter-spacing:1px;transition:background .15s,transform .1s;white-space:nowrap}
+#copy-btn:hover{background:var(--accent)}
+#copy-btn:active{transform:scale(.96)}
+#copy-btn.copied{background:#2d6b18}
+.instructions{color:var(--dim);font-size:13px;line-height:1.7;margin-bottom:20px;padding:12px 14px;border-left:3px solid var(--border);font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,.3)}
+.q-card{background:var(--card);border:1px solid var(--border);padding:clamp(16px,4vw,24px);margin-bottom:12px;backdrop-filter:blur(6px);transition:border-color .2s}
+.q-card:hover{border-color:#3a3f48}
+.q-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--num);letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.q-num::after{content:'';flex:1;height:1px;background:var(--border)}
+.q-text{font-size:clamp(15px,3.5vw,17px);line-height:1.8;color:#d4d6dc;font-style:italic;white-space:pre-wrap}
+.bottom-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(18,20,26,.95);border-top:1px solid var(--border);padding:12px 16px;z-index:20;backdrop-filter:blur(8px)}
+.bottom-bar button{width:100%;background:var(--accent2);color:#fff;border:none;font-family:'JetBrains Mono',monospace;font-size:14px;padding:12px;cursor:pointer;letter-spacing:1px}
+.bottom-bar button.copied{background:#2d6b18}
+@media(max-width:600px){.bottom-bar{display:block}#copy-btn{display:none}#questions{padding-bottom:80px}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.q-card{animation:fadeUp .4s ease both}
+</style>
+</head>
+<body>
+<div id="bg-canvas"></div>
+<div id="landing">
+  <h1>AP LIT</h1>
+  <div class="sub">Part 1: Identifications<br><strong>12 questions</strong> · 30 minutes</div>
+  <button id="show-btn">VIEW QUESTIONS</button>
+  <div class="note">Answer 10 out of 12</div>
+</div>
+<div id="questions">
+  <div class="header"><h2>IDENTIFICATIONS</h2><button id="copy-btn">COPY ALL</button></div>
+  <div class="instructions">Answer 10 out of 12 questions. Do not answer more than 10. Identify the text, author, speaker, addressee (if applicable) and context. If a pronoun is mentioned, identify the character/person.</div>
+  <div id="q-list"></div>
+  <div class="bottom-bar"><button id="copy-btn-mobile">COPY ALL QUESTIONS</button></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ── Questions ── */
+var QS=[
+"I sought fit words to paint the blackest face of woe;\nStudying inventions fine her wits to entertain,\nOft turning others\u2019 leaves, to see if thence would flow\nSome fresh and fruitful showers upon my sunburn\u2019d\n          brain.",
+"Then she heard a long, lingering, indistinct cry coming from one of the hills far beyond the forest; she listened to it in silence as it mingled like a strain of music with the last vibrations of her overwrought nerves.",
+"Now I see many dangers; for that is\nHis realm, his castle, and his diocese.\nBut if, as envious men, which would revile\nTheir prince, or coin his gold, themselves exile\nInto another country, and do it there,\nWe play in another house, what should we fear?",
+"My sin was too much hope of thee, lov\u2019d boy.\nSeven years tho\u2019 wert lent to me, and I thee pay,\nExacted by thy fate, on the just day.\nO, could I lose all father now! For why\nWill man lament the state he should envy?",
+"But that he was for ever inconsolable, that he fled from society, or contracted an habitual gloom of temper, or died of a broken heart, must not be depended on\u2014for he did neither. He lived to exert, and frequently to enjoy himself. His wife was not always out of humour, nor his home always uncomfortable; and in his breed of horses and dogs, and in sporting of every kind, he found no inconsiderable degree of domestic felicity.",
+"...when he took [his hat] off, he revealed two bloody, gaping sockets in place of eyelids. The flesh was falling away in crimson shreds, and from it oozed liquids which hardened into green scabs down to the nose, whose black nostrils were always sniffling convulsively.",
+"Thus vainly thinking that she thinks me young,\nAlthough she knows my days are past the best,\nSimply I credit her false-speaking tongue:\nOn both sides thus is simple truth suppressed.",
+"Perhaps in this neglected spot is laid\nSome heart once pregnant with celestial fire;\nHands, that the rod of empire might have sway\u2019d,\nOr wak\u2019d to ecstasy the living lyre.",
+"[She] was several years younger than [her], and totally unlike her in every respect. She was short and plump, had a very pretty face, and the finest expression of good humour in it that could possibly be. Her manners were by no means so elegant as her sister\u2019s, but they were much more prepossessing. She came in with a smile, smiled all the time of her visit, except when she laughed, and smiled when she went away. Her husband was a grave looking young man of five or six and twenty, with an air of more fashion and sense than his wife, but of less willingness to please or be pleased. He entered the room with a look of self-consequence, slightly bowed to the ladies, without speaking a word, and, after briefly surveying them and their apartments, took up a newspaper from the table, and continued to read it as long as he staid.",
+"I do now have to say...that the author of my history is no sage but some ignorant prattler, who started writing it in a haphazard and unplanned way and let it turn out however it would...",
+"And what library do you think you\u2019re looking for? There\u2019s no library and no books left in this house, because the devil himself took them away.",
+"\u201cFor once...it will be the last time, perhaps\u2014let us be cheerful together. I am in a fine mood for gaiety. Tell me honestly\u201d a deeper glow overspreading his cheeks, \u201cdo you think me most a knave or a fool?\u201d"
+];
+
+/* ── Render question cards ── */
+var list=document.getElementById("q-list");
+QS.forEach(function(q,i){
+  var card=document.createElement("div");
+  card.className="q-card";
+  card.style.animationDelay=(i*.06)+"s";
+  card.innerHTML='<div class="q-num">QUESTION '+(i+1)+'</div><div class="q-text">'+q.replace(/</g,"&lt;")+'</div>';
+  list.appendChild(card);
+});
+
+document.getElementById("show-btn").addEventListener("click",function(){
+  document.getElementById("landing").style.display="none";
+  document.getElementById("questions").style.display="block";
+});
+
+function copyAll(btn){
+  var text="AP LITERATURE \u2014 PART 1: IDENTIFICATIONS\nAnswer 10 out of 12. Identify the text, author, speaker, addressee, and context.\n\n";
+  QS.forEach(function(q,i){text+="--- QUESTION "+(i+1)+" ---\n"+q+"\n\n";});
+  navigator.clipboard.writeText(text).then(function(){
+    btn.textContent="\u2713 COPIED";btn.classList.add("copied");
+    setTimeout(function(){btn.textContent=btn.id==="copy-btn"?"COPY ALL":"COPY ALL QUESTIONS";btn.classList.remove("copied");},2000);
+  }).catch(function(){
+    var ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;opacity:0";
+    document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);
+    btn.textContent="\u2713 COPIED";btn.classList.add("copied");
+    setTimeout(function(){btn.textContent=btn.id==="copy-btn"?"COPY ALL":"COPY ALL QUESTIONS";btn.classList.remove("copied");},2000);
+  });
+}
+document.getElementById("copy-btn").addEventListener("click",function(){copyAll(this);});
+document.getElementById("copy-btn-mobile").addEventListener("click",function(){copyAll(this);});
+
+/* ═══════════════════════════════════════════════════
+   MINECRAFT BACKGROUND — auto-orbiting camera
+   ═══════════════════════════════════════════════════ */
+
+/* Procedural 16x16 textures */
+function nz(x,y,s){var n=Math.sin(x*12.9898+y*78.233+s)*43758.5453;return n-Math.floor(n);}
+function mkT(fn){
+  var c=document.createElement("canvas");c.width=16;c.height=16;fn(c.getContext("2d"));
+  var t=new THREE.Texture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.needsUpdate=true;return t;
+}
+function genT(){
+  var T={};
+  T.grass_top=mkT(function(x){var g=["#5D9B37","#4E8A2E","#6DAA42","#3F7B24","#5A9633"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=g[Math.floor(nz(i,y,1)*g.length)];x.fillRect(i,y,1,1);}});
+  T.dirt=mkT(function(x){var b=["#8B6B47","#7A5C3A","#9B7B57","#6B4C2D"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=b[Math.floor(nz(i,y,2)*b.length)];x.fillRect(i,y,1,1);}});
+  T.grass_side=mkT(function(x){var b=["#8B6B47","#7A5C3A","#9B7B57"],g=["#5D9B37","#4E8A2E"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=y<3?g[Math.floor(nz(i,y,3)*g.length)]:b[Math.floor(nz(i,y,4)*b.length)];x.fillRect(i,y,1,1);}});
+  T.stone=mkT(function(x){var g=["#8A8A8A","#7B7B7B","#9A9A9A","#6E6E6E"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=g[Math.floor(nz(i,y,7)*g.length)];x.fillRect(i,y,1,1);}});
+  T.cobblestone=mkT(function(x){x.fillStyle="#6B6B6B";x.fillRect(0,0,16,16);[{x:0,y:0,w:5,h:4,c:"#8A8A8A"},{x:5,y:0,w:6,h:5,c:"#7D7D7D"},{x:11,y:0,w:5,h:4,c:"#929292"},{x:0,y:4,w:4,h:5,c:"#757575"},{x:4,y:5,w:5,h:4,c:"#888"},{x:9,y:4,w:4,h:5,c:"#9A9A9A"},{x:0,y:9,w:6,h:4,c:"#858585"},{x:6,y:9,w:5,h:4,c:"#7A7A7A"},{x:11,y:9,w:5,h:4,c:"#8E8E8E"}].forEach(function(s){x.fillStyle=s.c;x.fillRect(s.x,s.y,s.w,s.h);});});
+  T.planks_oak=mkT(function(x){var p=["#B8945A","#A6843F","#C9A56B","#B08A50"];for(var i=0;i<4;i++){x.fillStyle=p[i];x.fillRect(0,i*4,16,4);x.fillStyle="#8A6A30";x.fillRect(0,i*4,16,1);}});
+  T.log_oak=mkT(function(x){var b=["#6B5030","#5A4020","#7B6040"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=b[Math.floor(nz(i,y,12)*b.length)];x.fillRect(i,y,1,1);}});
+  T.log_oak_top=mkT(function(x){x.fillStyle="#6B5030";x.fillRect(0,0,16,16);x.fillStyle="#B8945A";x.fillRect(3,3,10,10);x.fillStyle="#9A7A40";x.fillRect(6,6,4,4);});
+  T.leaves_oak=mkT(function(x){var g=["#2E6B12","#3A7D1E","#1E5B08","#4A8D2E"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){if(nz(i,y,15)>.15){x.fillStyle=g[Math.floor(nz(i,y,16)*g.length)];x.fillRect(i,y,1,1);}}});
+  T.stonebrick=mkT(function(x){x.fillStyle="#7A7A7A";x.fillRect(0,0,16,16);x.fillStyle="#8A8A8A";x.fillRect(1,1,6,3);x.fillRect(9,5,6,3);x.fillRect(1,9,6,3);x.fillStyle="#858585";x.fillRect(8,1,7,3);x.fillRect(1,5,7,3);x.fillRect(8,9,7,3);x.fillStyle="#6A6A6A";x.fillRect(0,0,16,1);x.fillRect(0,4,16,1);x.fillRect(0,8,16,1);x.fillRect(0,12,16,1);x.fillRect(7,0,1,4);x.fillRect(0,4,1,4);x.fillRect(8,8,1,4);});
+  T.glowstone=mkT(function(x){var g=["#F5D67B","#E8C560","#FDE48E"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=g[Math.floor(nz(i,y,28)*g.length)];x.fillRect(i,y,1,1);}});
+  T.glass=mkT(function(x){x.fillStyle="rgba(200,220,255,0.25)";x.fillRect(0,0,16,16);x.fillStyle="rgba(170,200,240,0.5)";x.fillRect(0,0,16,1);x.fillRect(0,15,16,1);x.fillRect(0,0,1,16);x.fillRect(15,0,1,16);});
+  T.bookshelf=mkT(function(x){x.fillStyle="#B8945A";x.fillRect(0,0,16,3);x.fillRect(0,13,16,3);x.fillStyle="#6B5030";x.fillRect(0,3,16,10);var c=["#AA2222","#2244AA","#22AA44","#AA8822","#6622AA"];var bx=1;for(var i=0;i<5;i++){x.fillStyle=c[i];x.fillRect(bx,4,2,4);x.fillRect(bx,9,2,3);bx+=3;}});
+  T.gravel=mkT(function(x){var g=["#8A8080","#7A7070","#9A9090","#6A6060"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=g[Math.floor(nz(i,y,33)*g.length)];x.fillRect(i,y,1,1);}});
+  T.water=mkT(function(x){var b=["#2255BB","#1E4FAA","#2960CC"];for(var y=0;y<16;y++)for(var i=0;i<16;i++){x.fillStyle=b[Math.floor(nz(i,y,25)*b.length)];x.fillRect(i,y,1,1);}});
+  T.mossy=mkT(function(x){x.fillStyle="#6B7B6B";x.fillRect(0,0,16,16);[{x:0,y:0,w:5,h:4,c:"#7A8A7A"},{x:5,y:0,w:6,h:5,c:"#6D7D6D"},{x:0,y:5,w:5,h:4,c:"#758575"},{x:6,y:5,w:5,h:4,c:"#8A9A8A"},{x:0,y:10,w:6,h:3,c:"#7E8E7E"},{x:7,y:10,w:5,h:3,c:"#6A7A6A"}].forEach(function(s){x.fillStyle=s.c;x.fillRect(s.x,s.y,s.w,s.h);});});
+  return T;
+}
+
+/* Try loading real textures, fallback to procedural */
+var T={};
+var TB="https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.8.8/blocks/";
+var realNames={grass_top:"grass_top",grass_side:"grass_side",dirt:"dirt",stone:"stone",
+  cobblestone:"cobblestone",planks_oak:"planks_oak",log_oak:"log_oak",log_oak_top:"log_oak_top",
+  leaves_oak:"leaves_oak",stonebrick:"stonebrick",glowstone:"glowstone",glass:"glass",
+  bookshelf:"bookshelf",gravel:"gravel",mossy:"cobblestone_mossy",water:"water_still"};
+
+function loadBG(){
+  var fb=genT();
+  Object.keys(fb).forEach(function(k){T[k]=fb[k];}); // start with fallback
+  return new Promise(function(ok){
+    var keys=Object.keys(realNames),done=0,total=keys.length;
+    keys.forEach(function(k){
+      var img=new Image();img.crossOrigin="anonymous";
+      img.onload=function(){
+        var t=new THREE.Texture(img);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.needsUpdate=true;
+        T[k]=t;done++;if(done>=total)ok();
+      };
+      img.onerror=function(){done++;if(done>=total)ok();};
+      img.src=TB+realNames[k]+".png";
+    });
+    setTimeout(ok,6000);
+  });
+}
+
+/* Scene */
+var scene,cam3,ren3;
+function mt(n){return new THREE.MeshLambertMaterial({map:T[n]||null});}
+function ms(s,tp){return[mt(s),mt(s),mt(tp),mt(tp),mt(s),mt(s)];}
+var BG3=new THREE.BoxGeometry(1,1,1);
+
+function pb(x,y,z,m){
+  var mat=Array.isArray(m)?m:mt(m);
+  var mesh=new THREE.Mesh(BG3,mat);
+  mesh.position.set(x+.5,y+.5,z+.5);
+  mesh.castShadow=true;mesh.receiveShadow=true;
+  scene.add(mesh);return mesh;
+}
+
+function buildScene(){
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x7EC8E3);
+  scene.fog=new THREE.Fog(0x7EC8E3,40,90);
+  cam3=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,150);
+  var cont=document.getElementById("bg-canvas");
+  ren3=new THREE.WebGLRenderer({antialias:false,alpha:false});
+  ren3.setSize(innerWidth,innerHeight);
+  ren3.setPixelRatio(Math.min(devicePixelRatio,1.5));
+  ren3.shadowMap.enabled=true;
+  cont.appendChild(ren3.domElement);
+
+  scene.add(new THREE.AmbientLight(0x8899bb,.65));
+  var sun=new THREE.DirectionalLight(0xffeedd,.85);
+  sun.position.set(40,60,25);sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024);
+  var sc=sun.shadow.camera;sc.near=1;sc.far=120;sc.left=-50;sc.right=50;sc.top=50;sc.bottom=-50;
+  scene.add(sun);
+  scene.add(new THREE.HemisphereLight(0x87CEEB,0x557733,.3));
+
+  // Ground
+  var pg=new THREE.PlaneGeometry(60,60);
+  var gt=T.grass_top.clone();gt.wrapS=gt.wrapT=THREE.RepeatWrapping;gt.repeat.set(60,60);
+  gt.magFilter=gt.minFilter=THREE.NearestFilter;gt.needsUpdate=true;
+  var gm=new THREE.Mesh(pg,new THREE.MeshLambertMaterial({map:gt}));
+  gm.rotation.x=-Math.PI/2;gm.receiveShadow=true;scene.add(gm);
+
+  // Paths
+  for(var i=-12;i<=12;i++){pb(i,-.01,0,"gravel");pb(0,-.01,i,"gravel");}
+
+  // Trees
+  function tree(tx,tz){
+    var h=4+Math.floor(Math.random()*2);
+    for(var y=0;y<h;y++)pb(tx,y,tz,ms("log_oak","log_oak_top"));
+    for(var ly=h-2;ly<=h+1;ly++){var r=ly<=h-1?2:1;
+      for(var lx=-r;lx<=r;lx++)for(var lz=-r;lz<=r;lz++){
+        if(lx===0&&lz===0&&ly<h)continue;
+        if(Math.abs(lx)===r&&Math.abs(lz)===r&&Math.random()>.5)continue;
+        var lf=pb(tx+lx,ly,tz+lz,"leaves_oak");lf.material.transparent=true;lf.material.alphaTest=.1;
+      }
+    }
+  }
+  for(var i=0;i<18;i++){
+    var tx=Math.floor((Math.random()-.5)*50),tz=Math.floor((Math.random()-.5)*50);
+    if(Math.abs(tx)<14&&Math.abs(tz)<14)continue;tree(tx,tz);
+  }
+
+  // Houses
+  function house(ox,oz,w,d,h,wall,floor,roof){
+    for(var x=0;x<w;x++)for(var z=0;z<d;z++)pb(ox+x,0,oz+z,floor);
+    for(var y=1;y<=h;y++){
+      for(var x=0;x<w;x++){if(!(y<=2&&x>=Math.floor(w/2)-1&&x<=Math.floor(w/2)))pb(ox+x,y,oz,wall);pb(ox+x,y,oz+d-1,wall);}
+      for(var z=1;z<d-1;z++){var iw=y===2&&z===Math.floor(d/2);
+        if(!iw){pb(ox,y,oz+z,wall);pb(ox+w-1,y,oz+z,wall);}
+        else{var g1=pb(ox,y,oz+z,"glass");g1.material.transparent=true;g1.material.opacity=.4;
+          var g2=pb(ox+w-1,y,oz+z,"glass");g2.material.transparent=true;g2.material.opacity=.4;}
+      }
+    }
+    for(var x=-1;x<=w;x++)for(var z=-1;z<=d;z++)pb(ox+x,h+1,oz+z,roof);
+    pb(ox+Math.floor(w/2),h,oz+Math.floor(d/2),"glowstone");
+  }
+  house(-8,-8,5,5,3,"planks_oak","cobblestone","planks_oak");
+  house(4,-10,6,5,3,"stonebrick","stone","planks_oak");
+  house(-10,4,5,5,3,"planks_oak","cobblestone","planks_oak");
+  house(5,5,7,5,4,"planks_oak","planks_oak","cobblestone");
+  for(var z=6;z<=8;z++){pb(6,1,z,"bookshelf");pb(6,2,z,"bookshelf");pb(10,1,z,"bookshelf");pb(10,2,z,"bookshelf");}
+
+  // Well
+  for(var x=-1;x<=1;x++)for(var z=-1;z<=1;z++){
+    if(x===0&&z===0){var wm=pb(x,0,z,"water");wm.material.transparent=true;wm.material.opacity=.6;}
+    else{pb(x,0,z,"cobblestone");pb(x,1,z,"cobblestone");}
+  }
+  pb(-1,2,-1,ms("log_oak","log_oak_top"));pb(1,2,-1,ms("log_oak","log_oak_top"));
+  pb(-1,2,1,ms("log_oak","log_oak_top"));pb(1,2,1,ms("log_oak","log_oak_top"));
+  for(var x=-1;x<=1;x++)for(var z=-1;z<=1;z++)pb(x,3,z,"planks_oak");
+
+  // Monuments (smaller, decorative)
+  var mp=[{x:-15,z:1},{x:15,z:1},{x:-12,z:-13},{x:12,z:-13},{x:-12,z:13},{x:12,z:13}];
+  mp.forEach(function(p){
+    for(var x=0;x<4;x++)pb(p.x+x,0,p.z,"stonebrick");
+    for(var y=1;y<=4;y++)for(var x=0;x<4;x++)pb(p.x+x,y,p.z,"stonebrick");
+    for(var y=1;y<=5;y++){pb(p.x-1,y,p.z,"mossy");pb(p.x+4,y,p.z,"mossy");}
+    for(var x=-1;x<=4;x++)pb(p.x+x,5,p.z,ms("cobblestone","stone"));
+    pb(p.x-1,0,p.z+1,"glowstone");pb(p.x+4,0,p.z+1,"glowstone");
+    var pl1=new THREE.PointLight(0xffdd88,.3,5);pl1.position.set(p.x,1.5,p.z+1.5);scene.add(pl1);
+  });
+
+  // Torch lights
+  for(var i=0;i<6;i++){var a=i*Math.PI/3,r=11;
+    var pl=new THREE.PointLight(0xffaa44,.35,7);pl.position.set(Math.cos(a)*r,2,Math.sin(a)*r);scene.add(pl);
+  }
+
+  // Clouds
+  for(var i=0;i<12;i++){
+    var cg=new THREE.BoxGeometry(3+Math.random()*4,.8,1.5+Math.random()*2.5);
+    var cm=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));
+    cm.position.set((Math.random()-.5)*80,22+Math.random()*6,(Math.random()-.5)*80);
+    cm.userData.cloud=true;scene.add(cm);
+  }
+}
+
+/* Orbit camera + render loop */
+var angle=0;
+function animate(){
+  requestAnimationFrame(animate);
+  angle+=.002;
+  var r=28;
+  cam3.position.set(Math.cos(angle)*r,14+Math.sin(angle*.3)*3,Math.sin(angle)*r);
+  cam3.lookAt(0,2,0);
+  scene.traverse(function(c){if(c.userData.cloud){c.position.x+=.015;if(c.position.x>42)c.position.x=-42;}});
+  ren3.render(scene,cam3);
+}
+
+window.addEventListener("resize",function(){
+  if(cam3){cam3.aspect=innerWidth/innerHeight;cam3.updateProjectionMatrix();}
+  if(ren3)ren3.setSize(innerWidth,innerHeight);
+});
+
+/* Init */
+(async function(){
+  try{await loadBG();}catch(e){}
+  buildScene();
+  animate();
+})();
+
+</script>
+</body>
+</html>
